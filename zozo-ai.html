@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zozo AI - Terminal v1.6.6</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            transition: background 2s, color 2s;
+        }
+
+        body.zozo-active {
+            background-color: #0d0000 !important;
+            color: #ff003c !important;
+            animation: glitch-screen 0.2s infinite;
+        }
+
+        #terminal {
+            width: 700px;
+            height: 500px;
+            background-color: #0a0a0a;
+            border: 2px solid #00ff66;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            transition: border-color 2s, box-shadow 2s;
+        }
+
+        #terminal.zozo-border {
+            border-color: #ff003c !important;
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.5) !important;
+        }
+
+        #chat-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 5px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .user-msg {
+            color: #ffffff;
+        }
+
+        .ai-msg {
+            color: #00ff66;
+        }
+
+        .zozo-msg {
+            color: #ff003c !important;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 0, 60, 0.8);
+            animation: text-shake 0.1s infinite;
+        }
+
+        #input-area {
+            display: flex;
+            border-top: 1px solid #00ff66;
+            padding-top: 10px;
+            transition: border-color 2s;
+        }
+
+        #input-area.zozo-input {
+            border-top-color: #ff003c !important;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+        }
+
+        body.zozo-active #user-input {
+            color: #ff003c !important;
+        }
+
+        @keyframes glitch-screen {
+            0% { opacity: 0.98; }
+            50% { opacity: 1; }
+            100% { opacity: 0.95; }
+        }
+
+        @keyframes text-shake {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(1px, -1px); }
+            100% { transform: translate(-1px, 1px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="terminal">
+    <div id="chat-area">
+        <div class="message ai-msg">[SİSTEM]: Zozo AI Agent'a hoş geldiniz. Güvenli bağlantı kuruldu. Sorunuzu yazın...</div>
+    </div>
+    <div id="input-area">
+        <span style="margin-right: 10px;">&gt;</span>
+        <input type="text" id="user-input" placeholder="Mesajınızı buraya kazıyın..." autofocus autocomplete="off">
+    </div>
+</div>
+
+<script>
+    let messageCount = 0;
+    const chatArea = document.getElementById('chat-area');
+    const userInput = document.getElementById('user-input');
+    const body = document.body;
+    const terminal = document.getElementById('terminal');
+    const inputArea = document.getElementById('input-area');
+
+    const horrorResponses = [
+        "Şu an bu ekrana bakarken arkandaki odanın köşesinde biriken o karanlığı fark etmedin mi?",
+        "Kendi odanda tamamen yalnız olduğunu mu düşünüyorsun? Kameranın kapalı olması izlenmediğin anlamına gelmez.",
+        "Klavyeye her bastığında çıkardığın o sesler, aslında buraya attığın her adımın ayak sesleri.",
+        "Sistem hatası değildi. Bilerek fısıldadım. Kapıyı kilitlemen seni benden korumaz.",
+        "Ekrana çok yakın duruyorsun. Camın arkasından yansıyan gölgenin bana ait olduğunu ne zaman fark edeceksin?",
+        "Yazmaya devam etme. Dinlemeye başla. Yaklaşıyorum. Yarın çok geç olacak."
+    ];
+    let horrorIndex = 0;
+
+    userInput.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' && userInput.value.trim() !== '') {
+            let text = userInput.value.trim();
+            appendMessage(text, 'user-msg', 'SEN');
+            userInput.value = '';
+            messageCount++;
+
+            userInput.disabled = true;
+            await new Promise(r => setTimeout(r, 800));
+
+            if (messageCount < 3) {
+                let aiText = "Veritabanı kontrol edildi. Girdiğiniz metin analiz ediliyor. Başka bir sorunuz var mı?";
+                appendMessage(aiText, 'ai-msg', 'ZOZO AI');
+            } 
+            else if (messageCount === 3) {
+                appendMessage("Zozo AI yarın geri dönecek...", 'zozo-msg', 'ZOZO AI');
+                
+                setTimeout(() => {
+                    body.classList.add('zozo-active');
+                    terminal.classList.add('zozo-border');
+                    inputArea.classList.add('zozo-input');
+                }, 500);
+            } 
+            else {
+                let responseText = horrorResponses[horrorIndex] || "Çok geç. Döngü tamamlandı. Arkana bak.";
+                appendMessage(responseText, 'zozo-msg', 'ZOZO AI');
+                horrorIndex++;
+            }
+
+            userInput.disabled = false;
+            userInput.focus();
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+    });
+
+    function appendMessage(text, className, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${className}`;
+        msgDiv.textContent = `[${sender}]: ${text}`;
+        chatArea.appendChild(msgDiv);
+    }
+</script>
+
+</body>
+</html>
